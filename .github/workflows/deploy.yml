@@ -21,10 +21,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -55,7 +55,7 @@ jobs:
       url: https://www.maxiaofei.site
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configure pinned SSH host and key
         env:
@@ -84,6 +84,14 @@ jobs:
 
       - name: Verify production health
         run: |
-          curl --fail --silent --show-error \
-            --retry 12 --retry-delay 5 --retry-all-errors \
-            https://www.maxiaofei.site/api/health
+          ssh -i "$HOME/.ssh/production_deploy" -o IdentitiesOnly=yes \
+            ubuntu@111.230.240.61 \
+            'for attempt in $(seq 1 12); do
+              if curl --fail --silent --show-error \
+                --resolve www.maxiaofei.site:443:127.0.0.1 \
+                https://www.maxiaofei.site/api/health; then
+                exit 0
+              fi
+              sleep 5
+            done
+            exit 1'

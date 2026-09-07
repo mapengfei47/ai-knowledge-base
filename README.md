@@ -70,7 +70,7 @@ docker compose pull && docker compose up --build -d
 
 ## GitHub Actions 自动部署
 
-工作流位于 `.github/workflows/deploy.yml`：Pull Request 只执行验证；推送到 `main` 时，在编译、lint、测试及生产依赖审计全部通过后，通过 SSH 将代码同步到服务器并重新构建容器。服务器上的 `.env` 会被保留，部署结束必须通过公网健康检查。
+工作流位于 `.github/workflows/deploy.yml`：Pull Request 只执行验证；推送到 `main` 时，在编译、lint、测试及生产依赖审计全部通过后，通过 SSH 将代码同步到服务器并重新构建容器。服务器上的 `.env` 会被保留，部署结束必须通过服务器本机的完整 HTTPS/Caddy 路径健康检查。之所以不从 GitHub 托管 Runner 直连公网域名，是为了避免海外 Runner 到国内云服务器的 TLS 链路波动造成假失败。
 
 首次启用：
 
