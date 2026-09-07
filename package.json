@@ -1,0 +1,16 @@
+{
+  "name": "ai-knowledge-base",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "npm run dev --workspace @knowledge/api & npm run dev --workspace @knowledge/web",
+    "build": "npm run build --workspace @knowledge/api && npm run build --workspace @knowledge/web",
+    "test": "npm run test --workspace @knowledge/api",
+    "lint": "npm run lint --workspace @knowledge/api && npm run lint --workspace @knowledge/web"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
+

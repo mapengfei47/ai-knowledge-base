@@ -1,0 +1,89 @@
+name: Verify and deploy
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Build
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+  deploy:
+    name: Deploy production
+    if: github.event_name != 'pull_request'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://www.maxiaofei.site
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Configure pinned SSH host and key
+        env:
+          PRODUCTION_SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
+        run: |
+          install -d -m 700 "$HOME/.ssh"
+          install -m 600 /dev/null "$HOME/.ssh/production_deploy"
+          printf '%s\n' "$PRODUCTION_SSH_KEY" > "$HOME/.ssh/production_deploy"
+          install -m 600 ops/known_hosts "$HOME/.ssh/known_hosts"
+
+      - name: Upload release
+        run: |
+          rsync -az --delete \
+            --exclude='.env' \
+            --exclude='.git/' \
+            --exclude='node_modules/' \
+            --exclude='dist/' \
+            -e "ssh -i $HOME/.ssh/production_deploy -o IdentitiesOnly=yes" \
+            ./ ubuntu@111.230.240.61:/opt/ai-knowledge-base/
+
+      - name: Rebuild and restart services
+        run: |
+          ssh -i "$HOME/.ssh/production_deploy" -o IdentitiesOnly=yes \
+            ubuntu@111.230.240.61 \
+            'cd /opt/ai-knowledge-base && test -s .env && sudo docker compose -f compose.yml -f compose.prod.yml up --build -d --remove-orphans'
+
+      - name: Verify production health
+        run: |
+          curl --fail --silent --show-error \
+            --retry 12 --retry-delay 5 --retry-all-errors \
+            https://www.maxiaofei.site/api/health
