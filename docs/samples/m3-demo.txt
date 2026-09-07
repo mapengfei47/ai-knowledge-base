@@ -1,0 +1,4 @@
+AI Knowledge Base M3 demo document.
+
+This file verifies the upload, local storage, BullMQ queue, Worker status, and deletion flow.
+Content parsing starts in M4.
