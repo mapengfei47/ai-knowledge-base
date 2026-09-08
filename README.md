@@ -1,6 +1,6 @@
 # Knowledge Relay
 
-一个可上线的最小全栈 CRUD Demo：React + NestJS + PostgreSQL + Redis。读取列表和详情时采用 cache-aside，写入、更新和删除后主动使相关缓存失效。
+一个面向个人知识沉淀与 AI 协作的数字化平台：React + NestJS + PostgreSQL + Redis。系统使用 Redis 会话保护知识接口；读取列表和详情时采用 cache-aside，写入、更新和删除后主动使相关缓存失效。
 
 ## 架构
 
@@ -26,26 +26,34 @@ curl http://localhost:8080/api/health
 docker compose down
 ```
 
+首次启动会创建管理员账号。本地默认账号为 `maxiaofei`、密码为 `maxiaofei1024`；公开部署前建议在 `.env` 中更换为强密码。管理员只会在用户表为空时创建，后续修改环境变量不会覆盖已有账号密码。
+
 数据保存在命名卷中；如确实需要清空本地数据，可执行 `docker compose down -v`。
 
 ## 验证 CRUD 与 Redis 缓存
 
 ```bash
+# 登录并保存会话 Cookie（密码按你的 .env 修改）
+curl -c session.cookie -X POST http://localhost:8080/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"maxiaofei","password":"maxiaofei1024","remember":false}'
+
 # 新建
 curl -i -X POST http://localhost:8080/api/knowledge \
+  -b session.cookie \
   -H 'Content-Type: application/json' \
   -d '{"title":"缓存策略","content":"写操作后删除列表与详情缓存","tag":"redis"}'
 
 # 第一次读取应返回 X-Cache: MISS，第二次为 HIT
-curl -i http://localhost:8080/api/knowledge
-curl -i http://localhost:8080/api/knowledge
+curl -i -b session.cookie http://localhost:8080/api/knowledge
+curl -i -b session.cookie http://localhost:8080/api/knowledge
 ```
 
 ## 单机上线（Ubuntu 24.04 / 任意云服务器）
 
 1. 准备一台开放 TCP 22/80/443 与 UDP 443 的服务器，并将域名 A/AAAA 记录指向它。
 2. 安装 Docker Engine 与 Compose plugin，将本仓库拉到服务器。
-3. `cp .env.example .env`，设置强随机 `POSTGRES_PASSWORD` 和真实 `DOMAIN`。
+3. `cp .env.example .env`，设置强随机 `POSTGRES_PASSWORD`、`ADMIN_PASSWORD` 和真实 `DOMAIN`。
 4. 启动：
 
 ```bash
@@ -81,4 +89,4 @@ docker compose pull && docker compose up --build -d
 
 服务器 SSH host key 固定保存在 `ops/known_hosts`；若服务器重装导致 host key 改变，核对新指纹后再更新该文件。
 
-上线前至少补齐：云防火墙、每日 PostgreSQL 异地备份、主机监控与告警、依赖漏洞扫描。这个 Demo 未实现账号系统，不应存放敏感内容；公开演示时建议再加身份认证或访问控制。
+上线前至少补齐：云防火墙、每日 PostgreSQL 异地备份、主机监控与告警、依赖漏洞扫描。当前为单管理员模型；如需多人使用，建议继续增加账号管理、密码修改、角色权限与审计日志。

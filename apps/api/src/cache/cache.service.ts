@@ -27,8 +27,8 @@ export class CacheService implements OnModuleInit, OnApplicationShutdown {
     return value ? (JSON.parse(value) as T) : null;
   }
 
-  async set(key: string, value: unknown): Promise<void> {
-    await this.client.set(key, JSON.stringify(value), { EX: this.ttl });
+  async set(key: string, value: unknown, ttl = this.ttl): Promise<void> {
+    await this.client.set(key, JSON.stringify(value), { EX: ttl });
   }
 
   async del(...keys: string[]): Promise<void> {
@@ -38,5 +38,10 @@ export class CacheService implements OnModuleInit, OnApplicationShutdown {
   ping(): Promise<string> {
     return this.client.ping();
   }
-}
 
+  async increment(key: string, ttl: number): Promise<number> {
+    const value = await this.client.incr(key);
+    if (value === 1) await this.client.expire(key, ttl);
+    return value;
+  }
+}

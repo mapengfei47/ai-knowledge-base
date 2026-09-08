@@ -1,8 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
+import { Public } from '../auth/public.decorator';
 import { DataSource } from 'typeorm';
 import { CacheService } from '../cache/cache.service';
 
 @Controller('health')
+@Public()
 export class HealthController {
   constructor(private readonly database: DataSource, private readonly cache: CacheService) {}
 
@@ -16,4 +18,3 @@ export class HealthController {
     };
   }
 }
-

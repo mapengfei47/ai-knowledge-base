@@ -5,7 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    proxy: { '/api': 'http://localhost:3000' },
+    // 本地 dev 时 API 的地址;端口被占用时可用 API_PROXY_TARGET 覆盖(默认 3000)。
+    proxy: { '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:3000' },
   },
 });
 

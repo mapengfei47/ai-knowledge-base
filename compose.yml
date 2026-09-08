@@ -38,6 +38,10 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-knowledge}:${POSTGRES_PASSWORD:-knowledge-local}@postgres:5432/${POSTGRES_DB:-knowledge}
       REDIS_URL: redis://redis:6379
       CACHE_TTL_SECONDS: 60
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-maxiaofei}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-maxiaofei1024}
+      ADMIN_DISPLAY_NAME: ${ADMIN_DISPLAY_NAME:-马小飞}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     depends_on:
       postgres:
         condition: service_healthy
@@ -64,4 +68,3 @@ services:
 volumes:
   postgres_data:
   redis_data:
-

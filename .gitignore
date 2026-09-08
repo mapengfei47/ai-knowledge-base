@@ -4,6 +4,9 @@ dist/
 .DS_Store
 coverage/
 *.log
+.vite/
 *.tsbuildinfo
+compose.override.yml
 apps/web/vite.config.js
 apps/web/vite.config.d.ts
+
